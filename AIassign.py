@@ -1,5 +1,6 @@
 import pandas as pd
 import random
+import streamlit as st
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.naive_bayes import MultinomialNB
@@ -107,4 +108,5 @@ while True:
         sentiment = "negative"
     
     print(f"Chatbox: {clean_input}")
+
     print(f"[ Sentiment: {sentiment} ]\n")
