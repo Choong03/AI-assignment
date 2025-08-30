@@ -1,0 +1,57 @@
+import pandas as pd
+import random
+
+# Word banks
+positive_words = ["good", "amazing", "excellent", "fantastic", "love", "happy", "great", "awesome", "wonderful", "enjoy"]
+negative_words = ["bad", "terrible", "awful", "hate", "worst", "angry", "horrible", "sad", "disappointing", "poor"]
+neutral_words = ["service", "product", "experience", "delivery", "support", "quality", "price", "system", "app", "feature"]
+
+# Expanded swear words list
+swear_words_list = [
+    "fuck","shit","bitch","bastard","asshole","damn","dick","pussy","cock","cunt","slut","whore","douche",
+    "bollocks","bugger","prick","wanker","twat","arse","jerk","moron","idiot","retard","piss","suck","jackass","motherfucker",
+    "hell","bloody","arsehole","dipshit","scumbag","knob","tosser","git","chav","skank","tramp","hag","hoe",
+    "jerkwad","fuckface","fuckhead","shithead","butthead","numbnuts","airhead","bonehead","blockhead","loser","dummy",
+    "weirdo","freak","nerd","geek","stupid","dumb","lame","trash","garbage","worthless","useless","lazy","slacker"
+]
+swear_words_set = set(w.lower() for w in swear_words_list)
+
+# Function to generate sentences
+def generate_sentence(sentiment="positive"):
+    length = random.randint(5, 12)
+    sentence = []
+    if sentiment == "positive":
+        sentence.append(random.choice(["I", "We"]))
+        sentence.append(random.choice(["love", "enjoy", "like", "appreciate"]))
+        sentence.append(random.choice(neutral_words))
+        sentence.extend(random.choices(positive_words, k=length-3))
+    elif sentiment == "negative":
+        sentence.append(random.choice(["I", "We"]))
+        sentence.append(random.choice(["hate", "dislike", "cannot stand", "am upset with"]))
+        sentence.append(random.choice(neutral_words))
+        # occasionally inject a swear word
+        if random.random() < 0.3:
+            sentence.append(random.choice(list(swear_words_set)))
+        sentence.extend(random.choices(negative_words, k=length-3))
+    else:  # neutral
+        sentence.append(random.choice(["The", "This"]))
+        sentence.append(random.choice(neutral_words))
+        sentence.append("is")
+        sentence.append(random.choice(["okay", "normal", "average", "acceptable"]))
+        sentence.extend(random.choices(neutral_words, k=length-4))
+    return " ".join(sentence)
+
+# Generate dataset (bigger size)
+data = []
+for _ in range(50000):  # 🔹 Change number here (e.g., 50k, 100k)
+    r = random.random()
+    if r < 0.33:
+        data.append([generate_sentence("positive"), "positive"])
+    elif r < 0.66:
+        data.append([generate_sentence("negative"), "negative"])
+    else:
+        data.append([generate_sentence("neutral"), "neutral"])
+
+df = pd.DataFrame(data, columns=["text", "label"])
+df.to_csv("synthetic_sentiment_dataset_large.csv", index=False)
+print("✅ Large dataset created with", len(df), "rows and saved as synthetic_sentiment_dataset_large.csv")
