@@ -1,3 +1,4 @@
+# streamlit_aiassign.py
 import streamlit as st
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
@@ -84,4 +85,3 @@ for text, pred in zip(X_test, y_pred):
     st.write(f"Input: `{text}` → Censored: `{censor_bad_words(text)}` → Predicted: **{pred}**")
 
 st.write("### Overall Accuracy:", accuracy_score(y_true, y_pred))
-
