@@ -1,4 +1,3 @@
-# streamlit_aiassign.py
 import streamlit as st
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
@@ -8,7 +7,7 @@ from sklearn.metrics import accuracy_score
 # ====================================
 # 1. Load dataset from CSV
 # ====================================
-dataset_path = "sentiment_dataset.csv"  # <-- put your CSV in same folder
+dataset_path = "sentiment_dataset.csv"  # file must be in same repo folder
 df = pd.read_csv(dataset_path)
 
 X = df["text"].tolist()
@@ -43,9 +42,9 @@ def censor_bad_words(text):
 # 4. Streamlit UI
 # ====================================
 st.title("💬 Sentiment Chatbox with Censorship")
-st.write("Type a message below and the system will censor bad words and predict sentiment.")
+st.write("This app censors bad words and predicts sentiment using Naive Bayes.")
 
-# User input
+# User input box
 user_input = st.text_input("Enter your message:")
 
 if user_input:
@@ -53,7 +52,7 @@ if user_input:
     X_input = vectorizer.transform([user_input])
     sentiment = clf.predict(X_input)[0]
 
-    st.subheader("Chatbox Response")
+    st.subheader("🔎 Chatbox Response")
     st.write(f"**Censored Text:** {clean_input}")
     st.write(f"**Predicted Sentiment:** {sentiment}")
 
@@ -84,4 +83,4 @@ y_pred = clf.predict(X_test_vec)
 for text, pred in zip(X_test, y_pred):
     st.write(f"Input: `{text}` → Censored: `{censor_bad_words(text)}` → Predicted: **{pred}**")
 
-st.write("### Overall Accuracy:", accuracy_score(y_true, y_pred))
+st.write("### ✅ Overall Accuracy:", accuracy_score(y_true, y_pred))
