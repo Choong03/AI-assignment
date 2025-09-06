@@ -1,32 +1,47 @@
-import streamlit as st
-from sentiment_utils import SentimentModel
+import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score
 
-# Load model
-model = SentimentModel("sentiment_dataset.csv")
 
-st.title("💬 Sentiment Chatbox with Learning & Accuracy Test")
-st.write("This app censors bad words, predicts sentiment, and learns from user input.")
+class SentimentModel:
+    def __init__(self, dataset_path="sentiment_dataset.csv"):
+        self.dataset_path = dataset_path
+        self.df = pd.read_csv(dataset_path)
+        self.vectorizer = CountVectorizer()
+        self.clf = MultinomialNB()
+        self._train()
 
-# User input for prediction
-user_input = st.text_input("Enter your message:")
-if user_input:
-    clean_input = model.censor_bad_words(user_input)
-    sentiment = model.predict(user_input)
-    st.subheader("🔎 Chatbox Response")
-    st.write(f"**Censored Text:** {clean_input}")
-    st.write(f"**Predicted Sentiment:** {sentiment}")
+    def _train(self):
+        # Train on full dataset
+        X = self.df["text"].astype(str).tolist()
+        y = self.df["label"].astype(str).tolist()
 
-# Accuracy based on CSV
-st.subheader("📊 Accuracy from CSV Test Split")
-st.write("### ✅ Current Accuracy:", round(model.get_accuracy(), 2))
+        X_vec = self.vectorizer.fit_transform(X)
+        self.clf.fit(X_vec, y)
 
-# Add new training example
-st.subheader("📝 Teach the Model")
-new_text = st.text_input("New training sentence:")
-new_label = st.selectbox("Select label:", ["positive", "negative", "neutral"])
+        # Evaluate accuracy on same dataset
+        y_pred = self.clf.predict(X_vec)
+        self.dataset_accuracy = accuracy_score(y, y_pred)
 
-if st.button("Add to Training Data"):
-    if new_text.strip():
-        model.add_training_example(new_text, new_label)
-        st.success(f"Added '{new_text}' as {new_label}. Model retrained!")
-        st.write("### 🔄 New Accuracy:", round(model.get_accuracy(), 2))
+        # Collect bad words from negative class
+        bad_words = self.df[self.df["label"] == "negative"]["text"].tolist()
+        self.bad_word_tokens = [w.lower() for phrase in bad_words for w in phrase.split()]
+
+    def censor_bad_words(self, text: str) -> str:
+        words = text.split()
+        censored = []
+        for w in words:
+            if w.lower() in self.bad_word_tokens:
+                censored.append("#" * len(w))
+            else:
+                censored.append(w)
+        return " ".join(censored)
+
+    def predict(self, text: str) -> str:
+        X_input = self.vectorizer.transform([text])
+        return self.clf.predict(X_input)[0]
+
+    def get_accuracy(self) -> float:
+        """Return accuracy measured on the dataset itself"""
+        return self.dataset_accuracy
