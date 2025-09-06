@@ -2,7 +2,6 @@ import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import train_test_split
 
 
 class SentimentModel:
@@ -14,24 +13,18 @@ class SentimentModel:
         self._train()
 
     def _train(self):
-        # Split dataset into train/test
-        X_train, X_test, y_train, y_test = train_test_split(
-            self.df["text"].astype(str), 
-            self.df["label"].astype(str), 
-            test_size=0.2, 
-            random_state=42
-        )
+        # Train on full dataset
+        X = self.df["text"].astype(str).tolist()
+        y = self.df["label"].astype(str).tolist()
 
-        # Train model
-        X_train_vec = self.vectorizer.fit_transform(X_train)
-        self.clf.fit(X_train_vec, y_train)
+        X_vec = self.vectorizer.fit_transform(X)
+        self.clf.fit(X_vec, y)
 
-        # Evaluate accuracy
-        X_test_vec = self.vectorizer.transform(X_test)
-        y_pred = self.clf.predict(X_test_vec)
-        self.test_accuracy_score = accuracy_score(y_test, y_pred)
+        # Evaluate accuracy on same dataset
+        y_pred = self.clf.predict(X_vec)
+        self.dataset_accuracy = accuracy_score(y, y_pred)
 
-        # Bad words from negative samples
+        # Collect bad words from negative class
         bad_words = self.df[self.df["label"] == "negative"]["text"].tolist()
         self.bad_word_tokens = [w.lower() for phrase in bad_words for w in phrase.split()]
 
@@ -49,12 +42,6 @@ class SentimentModel:
         X_input = self.vectorizer.transform([text])
         return self.clf.predict(X_input)[0]
 
-    def add_training_example(self, text: str, label: str):
-        """Add new training example and retrain"""
-        new_row = pd.DataFrame([[text, label]], columns=["text", "label"])
-        self.df = pd.concat([self.df, new_row], ignore_index=True)
-        self.df.to_csv(self.dataset_path, index=False)  # save back to CSV
-        self._train()
-
     def get_accuracy(self) -> float:
-        return self.test_accuracy_score
+        """Return accuracy measured on the dataset itself"""
+        return self.dataset_accuracy
