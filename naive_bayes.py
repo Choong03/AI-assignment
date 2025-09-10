@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import train_test_split
 
 # Global objects
@@ -24,7 +24,7 @@ def train_model(dataset_path="sentiment_dataset.csv"):
     swear_words = df[df["label"] == "negative"]["text"].str.lower().tolist()
 
     # Train/test split
-    X_train, X_test, y_train, y_test = train_test_split(
+    X_train, X_test_split, y_train, y_test_split = train_test_split(
         X, y, test_size=0.2, random_state=42
     )
 
@@ -35,8 +35,8 @@ def train_model(dataset_path="sentiment_dataset.csv"):
     clf.fit(X_train_vec, y_train)
 
     # Save test set for accuracy evaluation
-    X_test = X_test
-    y_test = y_test
+    X_test = X_test_split
+    y_test = y_test_split
 
 
 def censor_bad_words(text: str) -> str:
@@ -61,12 +61,30 @@ def predict_sentiment(text: str) -> str:
     return clf.predict(X_input)[0]
 
 
-def evaluate_accuracy() -> float:
-    """Compute accuracy on dataset test split"""
+def evaluate_accuracy() -> str:
+    """Compute accuracy and classification report on dataset test split"""
     global vectorizer, clf, X_test, y_test
     if vectorizer is None or clf is None:
         raise ValueError("Model not trained. Call train_model() first.")
 
     X_test_vec = vectorizer.transform(X_test)
     y_pred = clf.predict(X_test_vec)
-    return accuracy_score(y_test, y_pred)
+
+    acc = accuracy_score(y_test, y_pred)
+    report = classification_report(y_test, y_pred, digits=2)
+
+    print("Accuracy:", acc)
+    print("\nClassification Report:\n", report)
+    return report
+
+
+# Example usage
+if __name__ == "__main__":
+    train_model("sentiment_dataset.csv")
+    evaluate_accuracy()
+
+    # Try predictions
+    sample_text = "I hate this product"
+    print("\nOriginal:", sample_text)
+    print("Censored:", censor_bad_words(sample_text))
+    print("Predicted Sentiment:", predict_sentiment(sample_text))
