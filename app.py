@@ -1,5 +1,11 @@
 import streamlit as st
-from naive_bayes import train_model, censor_bad_words, predict_sentiment, evaluate_models
+import pandas as pd
+import naive_bayes as nb
+
+train_model = nb.train_model
+censor_bad_words = nb.censor_bad_words
+predict_sentiment = nb.predict_sentiment
+evaluate_models = getattr(nb, "evaluate_models", None)
 
 # Train model once when app starts
 train_model("sentiment_dataset.csv")
@@ -20,11 +26,12 @@ if user_input:
 
 # Model evaluation metrics (always shown)
 st.subheader("📊 Model comparison on dataset split")
-try:
-    results = evaluate_models()
-    # Convert to a simple table
-    import pandas as pd
-    df = pd.DataFrame(results)
-    st.dataframe(df)
-except Exception as e:
-    st.warning(f"Unable to evaluate models: {e}")
+if evaluate_models is None:
+    st.warning("Model comparison not available in the current server version. Restart or redeploy to load latest code.")
+else:
+    try:
+        results = evaluate_models()
+        df = pd.DataFrame(results)
+        st.dataframe(df)
+    except Exception as e:
+        st.warning(f"Unable to evaluate models: {e}")
